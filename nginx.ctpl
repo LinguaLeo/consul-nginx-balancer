@@ -1,0 +1,16 @@
+upstream service {
+  least_conn;
+  # service {{env "SERVICE_NAME"}}
+  {{range service (env "SERVICE_NAME")}}server {{.Address}}:{{.Port}};
+  {{else}}server 127.0.0.1:65535; # force a 502{{end}}
+}
+
+server {
+  listen 80;
+  location / {
+    proxy_pass  http://service;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}
